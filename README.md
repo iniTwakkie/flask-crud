@@ -19,35 +19,34 @@ A simple Flask Python CRUD app to understand how the basics of CRUD works with a
 
 ## Running Locally
 
-Use the .devcontainer to run the program inside of .devcontainer.
-
-```bash Docker Compuse
-version: '3.8'
-
+```bash Docker Compose Yml
 services:
   app:
-    image: buildwithdan/flask-crud:latest  # Assuming this is the image with everything set up
+    image: buildwithdan/flask-crud:latest
     restart: unless-stopped
     ports:
-      - "5100:5000"  # Exposing the Flask app on port 5100 externally. Reminder the logic is HOST:CONTAINER. The container port has to be 5000 as the build image we set it as 5000 in the dockerfile.
-
+      - "5100:5000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:latest
     restart: unless-stopped
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
-      POSTGRES_PASSWORD: postgres  # Make sure to use secure passwords in production
+    volumes:
+      - /srv/docker/flask-crud/data:/var/lib/postgresql
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-volumes:
-  postgres-data:
 ```
 
 This application requires the latest python and flask to be installed.
@@ -57,5 +56,3 @@ git clone https://github.com/buildwithdan/flask-crud
 cd flask-crud
 flask --debug --app api.app run
 ```
-
-docker-compose.yml
